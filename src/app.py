@@ -1,4 +1,5 @@
-import sys, signal
+import sys
+import signal
 import tkinter as tk
 import keyboard
 import pyautogui
@@ -19,7 +20,7 @@ class CopilotApp:
     It uses a language model (LLM) to generate responses based on clipboard content and displays the results in a new window.
     """
 
-    def __init__(self, root:ctk.CTk):
+    def __init__(self, root: ctk.CTk):
         self.llm = LLM()
         self.prompts = get_task_prompts()
         self.editor_prompts = get_editor_prompts()
@@ -84,13 +85,14 @@ class CopilotApp:
 
         tasks = [
             ("Summarize", 0),
-            ("Compose Mail", 1),
+            ("Translate", 5),
             ("Fix Grammar", 2),
             ("Extract Keywords", 3),
             ("Explain", 4),
+            ("Compose Mail", 1),
         ]
 
-        colors = ["#ED7D3A", "#1E90FF", "#0CCE6B", "#DCED31", "#EF2D56"]
+        colors = ["#ED7D3A", "#1E90FF", "#0CCE6B", "#DCED31", "#EF2D56", "#8E24AA"]
 
         for i, (text, index) in enumerate(tasks):
             button_options["border_color"] = colors[i]
@@ -130,7 +132,7 @@ class CopilotApp:
         # 模仿用户点击Ctrl+C
         pyautogui.hotkey('ctrl', 'c')
         # 读取剪贴板内容作为用户输入
-        prompt = prompt.format(text=pyperclip.paste(),language=LANGUAGE)
+        prompt = prompt.format(text=pyperclip.paste(), language=LANGUAGE)
         logger.info(f"Prompt: {prompt}")
         generated_text = self.llm.generate(prompt)
         logger.info(f"Generated text: {generated_text}")
@@ -259,7 +261,7 @@ class CopilotApp:
 
         if editor_prompt:
             prompt = editor_prompt["prompt"]
-            prompt = prompt.format(text=text,language=LANGUAGE)
+            prompt = prompt.format(text=text, language=LANGUAGE)
             logger.info(f"Prompt for {task}: {prompt}")
             generated_text = self.llm.generate(prompt)
             logger.info(f"Generated text for {task}: {generated_text}")
@@ -268,7 +270,23 @@ class CopilotApp:
             text_box.delete("1.0", tk.END)
             text_box.insert(tk.END, generated_text)
             text_box.configure(state="disabled")
-    
+
+    def create_right_click_menu(self):
+        """
+        Create a right-click menu with options to toggle the window and exit the application.
+        """
+        self.right_click_menu = tk.Menu(self.root, tearoff=0)
+        self.right_click_menu.add_command(label="Close Window", command=self.toggle_window)
+        self.right_click_menu.add_command(label="Exit App", command=self.root.quit)
+
+        def show_right_click_menu(event):
+            try:
+                self.right_click_menu.tk_popup(event.x_root, event.y_root)
+            finally:
+                self.right_click_menu.grab_release()
+
+        self.root.bind("<Button-3>", show_right_click_menu)
+
 
 def signal_handler(sig, frame):
     logger.info("Ctrl+C pressed. Exiting...")
@@ -278,6 +296,7 @@ def signal_handler(sig, frame):
 def main():
     root = ctk.CTk()
     app = CopilotApp(root)
+    app.create_right_click_menu()  # Add this line to create the right-click menu
     keyboard.add_hotkey("ctrl+space", app.toggle_window)
 
     # Set up signal handler for Ctrl+C

@@ -59,6 +59,14 @@ Explain the text below in {language}:
 Explanation:
 """.strip(),
         },
+        {
+            "task": "Translate",
+            "prompt": """
+Translate the following source text to {language}:, Output translation directly without any additional text.
+Source Text: {text}
+Translated Text:
+""".strip(),
+        }
     ]
 
 

@@ -9,7 +9,7 @@ class LLM:
     """
 
     def __init__(self) -> None:
-        print("INFO: Loading model...")
+        logger.info("Loading model...")
         self.system_prompt = (
             "You are responsible for rephrasing, summarizing, or editing various text snippets to make them more "
             "concise, coherent, and engaging. You are also responsible for writing emails, messages, and other forms "
@@ -20,7 +20,7 @@ class LLM:
             base_url = 'http://localhost:11434/v1',
             api_key='noneed', # required, but unused
         )
-        print("INFO: Model loaded successfully.")
+        logger.info("Model loaded successfully.")
 
     def generate(
         self, text: str, max_tokens: int = 2048, temperature: float = 0.3
