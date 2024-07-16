@@ -31,6 +31,7 @@ class CopilotApp:
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.drag_data = {"x": 0, "y": 0}  # Store the drag data
         self.border_color = "#363537"
+        self.is_pinned = False
 
     def _initialize_root_window(self):
         """
@@ -160,6 +161,44 @@ class CopilotApp:
         )
         center_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER, bordermode="outside")
 
+        # Add a blank horizontal bar for the pin button and close button
+        blank_bar = ctk.CTkFrame(center_frame, height=40, fg_color="white")
+        blank_bar.pack(fill="x", padx=10, pady=(10, 0))
+
+        # Add pin button
+        pin_button = ctk.CTkButton(
+            blank_bar,
+            text="📌",
+            command=lambda: self.toggle_pin(new_window),
+            width=30,
+            height=30,
+            corner_radius=15,
+            fg_color="white",
+            font=("Roboto", 16, "normal"),
+            text_color="#363537",
+            hover_color="gray",
+            border_width=2,
+            border_color="#363537",
+        )
+        pin_button.pack(side="left", padx=10)
+
+        # Add close button
+        close_button = ctk.CTkButton(
+            blank_bar,
+            text="❎",
+            command=new_window.destroy,
+            width=30,
+            height=30,
+            corner_radius=15,
+            fg_color="white",
+            font=("Roboto", 16, "normal"),
+            text_color="#363537",
+            hover_color="gray",
+            border_width=2,
+            border_color="#363537",
+        )
+        close_button.pack(side="right", padx=10)
+
         text_box = ctk.CTkTextbox(
             center_frame,
             wrap=tk.WORD,
@@ -167,12 +206,10 @@ class CopilotApp:
             corner_radius=10,
             fg_color="#212230",
             text_color="#FFFFFF",
-            # border_width=1,
-            # border_color="#363537",
             width=560,
-            height=360,
+            height=320,  # Reduce the height to account for the blank bar
         )
-        text_box.pack(expand=True, fill="both", padx=(10, 10), pady=(10, 0))
+        text_box.pack(expand=True, fill="both", padx=(10, 10), pady=(10, 10))
         text_box.insert(tk.END, text)
         text_box.configure(state="disabled")
 
@@ -221,7 +258,7 @@ class CopilotApp:
         new_window.geometry(f"+{x}+{y}")
 
         def on_focus_out(event):
-            if not new_window.focus_get():
+            if not new_window.focus_get() and not self.is_pinned:
                 new_window.destroy()
 
         new_window.bind("<FocusOut>", on_focus_out)
@@ -232,6 +269,37 @@ class CopilotApp:
             "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
         )
         center_frame.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
+
+        # Bind mouse events for dragging the blank bar
+        blank_bar.bind(
+            "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
+        )
+        blank_bar.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
+        def on_focus_out(event):
+            if not new_window.focus_get() and not self.is_pinned:
+                new_window.destroy()
+
+        new_window.bind("<FocusOut>", on_focus_out)
+        new_window.focus_force()
+
+        # Bind mouse events for dragging the window
+        center_frame.bind(
+            "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
+        )
+        center_frame.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
+
+        # Bind mouse events for dragging the blank bar
+        blank_bar.bind(
+            "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
+        )
+        blank_bar.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
+
+    def toggle_pin(self, window):
+        self.is_pinned = not self.is_pinned
+        if self.is_pinned:
+            window.attributes("-topmost", True)
+        else:
+            window.attributes("-topmost", False)
 
     def start_drag_root(self, event):
         self.drag_data["x"] = event.x
