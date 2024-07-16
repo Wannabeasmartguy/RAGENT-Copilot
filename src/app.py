@@ -1,10 +1,15 @@
+import sys, signal
 import tkinter as tk
 import keyboard
 import pyautogui
 import customtkinter as ctk
 from concurrent.futures import ThreadPoolExecutor
 from utils.llm import LLM
+from loguru import logger
 from utils.prompts import get_task_prompts, get_editor_prompts
+# TODO：先使用环境变量控制语言
+from utils.prompts import LANGUAGE
+
 import pyperclip
 
 
@@ -14,7 +19,7 @@ class CopilotApp:
     It uses a language model (LLM) to generate responses based on clipboard content and displays the results in a new window.
     """
 
-    def __init__(self, root):
+    def __init__(self, root:ctk.CTk):
         self.llm = LLM()
         self.prompts = get_task_prompts()
         self.editor_prompts = get_editor_prompts()
@@ -36,6 +41,8 @@ class CopilotApp:
         self.root.attributes("-topmost", True)
         self.root.attributes("-transparentcolor", self.root["bg"])
         self.root.withdraw()  # Hide the window initially
+        self.root.bind("<Button-1>", self.start_drag_root)
+        self.root.bind("<B1-Motion>", self.do_drag_root)
 
     def _create_layout(self):
         """
@@ -102,7 +109,7 @@ class CopilotApp:
         """
         if self.root.state() == "withdrawn":
             x, y = pyautogui.position()
-            self.root.geometry(f"+{x-50}+{y-100}")
+            self.root.geometry(f"+{x-50}+{y-150}")
             self.root.deiconify()
         else:
             self.root.withdraw()
@@ -120,8 +127,13 @@ class CopilotApp:
         Execute the task corresponding to the clicked button.
         """
         prompt = self.prompts[task_index]["prompt"]
-        prompt = prompt.format(text=pyperclip.paste())
+        # 模仿用户点击Ctrl+C
+        pyautogui.hotkey('ctrl', 'c')
+        # 读取剪贴板内容作为用户输入
+        prompt = prompt.format(text=pyperclip.paste(),language=LANGUAGE)
+        logger.info(f"Prompt: {prompt}")
         generated_text = self.llm.generate(prompt)
+        logger.info(f"Generated text: {generated_text}")
         pyperclip.copy(generated_text)
         self.root.after(0, self.show_generated_text, generated_text)
 
@@ -131,7 +143,7 @@ class CopilotApp:
         """
         new_window = tk.Toplevel(self.root)
         new_window.title("Generated Text")
-        new_window.geometry("600x450")
+        new_window.geometry("1200x900")
         new_window.overrideredirect(True)
         new_window.attributes("-transparentcolor", new_window["bg"])
 
@@ -152,6 +164,7 @@ class CopilotApp:
             font=("Roboto", 18),
             corner_radius=10,
             fg_color="#212230",
+            text_color="#FFFFFF",
             # border_width=1,
             # border_color="#363537",
             width=560,
@@ -214,15 +227,24 @@ class CopilotApp:
 
         # Bind mouse events for dragging the window
         center_frame.bind(
-            "<Button-1>", lambda event: self.start_drag(event, new_window)
+            "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
         )
-        center_frame.bind("<B1-Motion>", lambda event: self.do_drag(event, new_window))
+        center_frame.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
 
-    def start_drag(self, event, window):
+    def start_drag_root(self, event):
         self.drag_data["x"] = event.x
         self.drag_data["y"] = event.y
 
-    def do_drag(self, event, window):
+    def do_drag_root(self, event):
+        x = self.root.winfo_x() + event.x - self.drag_data["x"]
+        y = self.root.winfo_y() + event.y - self.drag_data["y"]
+        self.root.geometry(f"+{x}+{y}")
+
+    def start_drag_new_window(self, event, window):
+        self.drag_data["x"] = event.x
+        self.drag_data["y"] = event.y
+
+    def do_drag_new_window(self, event, window):
         x = window.winfo_x() + event.x - self.drag_data["x"]
         y = window.winfo_y() + event.y - self.drag_data["y"]
         window.geometry(f"+{x}+{y}")
@@ -237,21 +259,33 @@ class CopilotApp:
 
         if editor_prompt:
             prompt = editor_prompt["prompt"]
-            prompt = prompt.format(text=text)
+            prompt = prompt.format(text=text,language=LANGUAGE)
+            logger.info(f"Prompt for {task}: {prompt}")
             generated_text = self.llm.generate(prompt)
+            logger.info(f"Generated text for {task}: {generated_text}")
             pyperclip.copy(generated_text)
             text_box.configure(state="normal")
             text_box.delete("1.0", tk.END)
             text_box.insert(tk.END, generated_text)
             text_box.configure(state="disabled")
+    
+
+def signal_handler(sig, frame):
+    logger.info("Ctrl+C pressed. Exiting...")
+    sys.exit(0)
 
 
 def main():
     root = ctk.CTk()
     app = CopilotApp(root)
     keyboard.add_hotkey("ctrl+space", app.toggle_window)
+
+    # Set up signal handler for Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
+
     root.mainloop()
 
 
 if __name__ == "__main__":
+    logger.add("app.log", rotation="10 MB")
     main()

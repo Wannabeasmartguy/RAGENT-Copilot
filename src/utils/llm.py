@@ -1,4 +1,6 @@
-from llama_cpp import Llama
+# from llama_cpp import Llama
+from openai import OpenAI
+from loguru import logger
 
 
 class LLM:
@@ -13,16 +15,10 @@ class LLM:
             "concise, coherent, and engaging. You are also responsible for writing emails, messages, and other forms "
             "of communication."
         )
-        self.llm = Llama.from_pretrained(
-            repo_id="MaziyarPanahi/Qwen2-1.5B-Instruct-GGUF",
-            filename="Qwen2-1.5B-Instruct.Q4_K_M.gguf",
-            local_dir="./models",
-            n_ctx=2048,
-            n_batch=1024,
-            n_gpu_layers=-1,
-            flash_attn=True,
-            cont_batching=True,
-            verbose=False,
+        
+        self.llm = OpenAI(
+            base_url = 'http://localhost:11434/v1',
+            api_key='noneed', # required, but unused
         )
         print("INFO: Model loaded successfully.")
 
@@ -37,7 +33,9 @@ class LLM:
         :param temperature: Sampling temperature for generation.
         :return: Generated text response.
         """
-        response = self.llm.create_chat_completion(
+        logger.info(f"Generating response for text: {text}")
+        response = self.llm.chat.completions.create(
+            model = "qwen2:latest",
             messages=[
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": text},
@@ -45,4 +43,5 @@ class LLM:
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        return response["choices"][0]["message"]["content"]
+        logger.info("response: {}".format(response))
+        return response.choices[0].message.content

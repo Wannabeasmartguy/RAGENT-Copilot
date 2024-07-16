@@ -1,3 +1,6 @@
+# LANGUAGE = "English"
+LANGUAGE = "Chinese"
+
 def get_task_prompts():
     """
     Return a list of task prompts for various text processing tasks. Each prompt is designed to guide the language model
@@ -9,7 +12,7 @@ def get_task_prompts():
         {
             "task": "Summarize",
             "prompt": """
-Summarize the text below:
+Summarize the text below in {language}:
 
 {text}
 
@@ -19,7 +22,7 @@ Summary:
         {
             "task": "Compose Mail",
             "prompt": """
-Compose an email about the text below:
+Compose an email about the text below in {language}:
 
 {text}
 
@@ -29,7 +32,7 @@ Email:
         {
             "task": "Fix Grammar",
             "prompt": """
-Fix the grammar in the text below:
+Fix the grammar in the text below in {language}:
 
 {text}
 
@@ -39,7 +42,7 @@ Corrected Text:
         {
             "task": "Extract Keywords",
             "prompt": """
-List the keywords in the text below:
+List the keywords in the text below in {language}:
 
 {text}
 
@@ -49,7 +52,7 @@ Keywords:
         {
             "task": "Explain",
             "prompt": """
-Explain the text below:
+Explain the text below in {language}:
 
 {text}
 
@@ -73,7 +76,7 @@ def get_editor_prompts():
         {
             "editor": "Casual",
             "prompt": """
-Rewrite the text below in a casual tone:
+Rewrite the text below in a casual tone in {language}:
 
 {text}
 
@@ -83,7 +86,7 @@ Rewritten Text:
         {
             "editor": "Formal",
             "prompt": """
-Rewrite the text below in a formal tone:
+Rewrite the text below in a formal tone in {language}:
 
 {text}
 
@@ -93,7 +96,7 @@ Rewritten Text:
         {
             "editor": "Professional",
             "prompt": """
-Rewrite the text below in a professional tone:
+Rewrite the text below in a professional tone in {language}:
 
 {text}
 
@@ -103,7 +106,7 @@ Rewritten Text:
         {
             "editor": "Technical",
             "prompt": """
-Rewrite the text below in a technical tone:
+Rewrite the text below in a technical tone in {language}:
 
 {text}
 
@@ -114,7 +117,7 @@ Rewritten Text:
         {
             "editor": "Simple",
             "prompt": """
-Rewrite the text below in a simple tone:
+Rewrite the text below in a simple tone in {language}:
 
 {text}
 
