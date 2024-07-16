@@ -166,7 +166,7 @@ class CopilotApp:
         blank_bar.pack(fill="x", padx=10, pady=(10, 0))
 
         # Add pin button
-        pin_button = ctk.CTkButton(
+        self.pin_button = ctk.CTkButton(
             blank_bar,
             text="📌",
             command=lambda: self.toggle_pin(new_window),
@@ -180,7 +180,7 @@ class CopilotApp:
             border_width=2,
             border_color="#363537",
         )
-        pin_button.pack(side="left", padx=10)
+        self.pin_button.pack(side="left", padx=10)
 
         # Add close button
         close_button = ctk.CTkButton(
@@ -275,31 +275,15 @@ class CopilotApp:
             "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
         )
         blank_bar.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
-        def on_focus_out(event):
-            if not new_window.focus_get() and not self.is_pinned:
-                new_window.destroy()
-
-        new_window.bind("<FocusOut>", on_focus_out)
-        new_window.focus_force()
-
-        # Bind mouse events for dragging the window
-        center_frame.bind(
-            "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
-        )
-        center_frame.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
-
-        # Bind mouse events for dragging the blank bar
-        blank_bar.bind(
-            "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
-        )
-        blank_bar.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
 
     def toggle_pin(self, window):
         self.is_pinned = not self.is_pinned
         if self.is_pinned:
             window.attributes("-topmost", True)
+            self.pin_button.configure(text="📌 Pinned")
         else:
             window.attributes("-topmost", False)
+            self.pin_button.configure(text="📌")
 
     def start_drag_root(self, event):
         self.drag_data["x"] = event.x
