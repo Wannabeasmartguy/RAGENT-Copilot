@@ -255,6 +255,10 @@ class CopilotApp:
         """
         Handle text editing tasks. Implement the logic as needed.
         """
+        self.show_loading_overlay(text_box)
+        self.executor.submit(self.async_edit_text, task, text, text_box)
+
+    def async_edit_text(self, task, text, text_box):
         editor_prompt = next(
             (item for item in self.editor_prompts if item["editor"] == task), None
         )
@@ -266,10 +270,22 @@ class CopilotApp:
             generated_text = self.llm.generate(prompt)
             logger.info(f"Generated text for {task}: {generated_text}")
             pyperclip.copy(generated_text)
-            text_box.configure(state="normal")
-            text_box.delete("1.0", tk.END)
-            text_box.insert(tk.END, generated_text)
-            text_box.configure(state="disabled")
+            self.root.after(0, self.update_text_box, text_box, generated_text)
+
+    def show_loading_overlay(self, text_box):
+        overlay = tk.Frame(text_box, bg="#212230")
+        overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        loading_label = tk.Label(overlay, text="Loading...", font=("Roboto", 18), bg="#212230", fg="white")
+        loading_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        self.overlay = overlay  # Store the overlay reference
+
+    def update_text_box(self, text_box, generated_text):
+        text_box.configure(state="normal")
+        text_box.delete("1.0", tk.END)
+        text_box.insert(tk.END, generated_text)
+        text_box.configure(state="disabled")
+        self.overlay.destroy()  # Remove the overlay
 
     def create_right_click_menu(self):
         """
