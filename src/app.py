@@ -5,9 +5,11 @@ import keyboard
 import pyautogui
 import customtkinter as ctk
 from concurrent.futures import ThreadPoolExecutor
+from typing import Generator, Union
 from utils.llm import LLM
 from loguru import logger
 from utils.prompts import get_task_prompts, get_editor_prompts
+from utils.logger_config import setup_logger
 # TODO：先使用环境变量控制语言
 from utils.prompts import LANGUAGE
 
@@ -137,10 +139,9 @@ class CopilotApp:
         logger.info(f"Prompt: {prompt}")
         generated_text = self.llm.generate(prompt)
         logger.info(f"Generated text: {generated_text}")
-        pyperclip.copy(generated_text)
         self.root.after(0, self.show_generated_text, generated_text)
 
-    def show_generated_text(self, text):
+    def show_generated_text(self, text: Union[Generator, str]):
         """
         Display the generated text in a new, borderless window near the mouse cursor.
         """
@@ -149,6 +150,20 @@ class CopilotApp:
         new_window.geometry("1200x900")
         new_window.overrideredirect(True)
         new_window.attributes("-transparentcolor", new_window["bg"])
+
+        # Set the window position to the mouse cursor
+        x, y = pyautogui.position()
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        # Adjust the window position to stay within screen boundaries
+        window_width = 600
+        window_height = 450
+
+        x = min(max(0, x - window_width // 2), screen_width - window_width)
+        y = min(max(0, y - window_height // 2), screen_height - window_height)
+
+        new_window.geometry(f"+{x}+{y}")
 
         center_frame = ctk.CTkFrame(
             new_window,
@@ -210,7 +225,15 @@ class CopilotApp:
             height=320,  # Reduce the height to account for the blank bar
         )
         text_box.pack(expand=True, fill="both", padx=(10, 10), pady=(10, 10))
-        text_box.insert(tk.END, text)
+
+        # According to the type of text, insert it into the text box
+        if isinstance(text, str):
+            logger.debug(f"Text")
+            text_box.insert(tk.END, text)
+        elif hasattr(text, '__iter__'):
+            logger.debug(f"Generator")
+            self.insert_text_generator(text_box, text, new_window)
+
         text_box.configure(state="disabled")
 
         # Create buttons for editing text
@@ -244,19 +267,6 @@ class CopilotApp:
             )
             edit_button.grid(row=0, column=i, padx=5)
 
-        x, y = pyautogui.position()
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-
-        # Adjust the window position to stay within screen boundaries
-        window_width = 600
-        window_height = 450
-
-        x = min(max(0, x - window_width // 2), screen_width - window_width)
-        y = min(max(0, y - window_height // 2), screen_height - window_height)
-
-        new_window.geometry(f"+{x}+{y}")
-
         def on_focus_out(event):
             if not new_window.focus_get() and not self.is_pinned:
                 new_window.destroy()
@@ -275,6 +285,24 @@ class CopilotApp:
             "<Button-1>", lambda event: self.start_drag_new_window(event, new_window)
         )
         blank_bar.bind("<B1-Motion>", lambda event: self.do_drag_new_window(event, new_window))
+
+    def insert_text_generator(self, text_box, text_generator, new_window):
+        if not text_box.winfo_exists():
+            logger.debug("Text box does not exist")
+            return
+        try:
+            chunk = next(text_generator)
+            logger.debug(f"Generated chunk: {chunk}")
+            text_box.configure(state="normal")  # Make the text box editable
+            text_box.insert(tk.END, chunk.choices[0].delta.content)
+            text_box.see(tk.END)
+            text_box.update()
+            text_box.configure(state="disabled")  # Make the text box read-only again
+            new_window.after(100, self.insert_text_generator, text_box, text_generator, new_window)
+        except StopIteration:
+            logger.debug(f"StopIteration")
+            text_box.configure(state="disabled")  # Ensure the text box is read-only after generator ends
+            pass
 
     def toggle_pin(self, window):
         self.is_pinned = not self.is_pinned

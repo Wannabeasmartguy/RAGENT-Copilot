@@ -1,8 +1,10 @@
 # from llama_cpp import Llama
 from openai import OpenAI
 from loguru import logger
+from utils.logger_config import setup_logger
 
 from typing import List
+
 
 DEFAULT_MODEL = "qwen2:1.5b"
 DEFAULT_CONFIG = [
@@ -18,6 +20,7 @@ DEFAULT_CONFIG = [
         },
     }
 ]
+
 
 class LLM:
     """
@@ -60,6 +63,11 @@ class LLM:
             ],
             temperature=self.defult_config["params"]["temperature"],
             max_tokens=self.defult_config["params"]["max_tokens"],
+            stream=self.defult_config["params"]["stream"],
         )
-        logger.info("response: {}".format(response))
-        return response.choices[0].message.content
+        if self.defult_config["params"]["stream"]:
+            logger.info("Streaming response")
+            return response
+        else:
+            logger.info("Response: {}".format(response))
+            return response.choices[0].message.content
