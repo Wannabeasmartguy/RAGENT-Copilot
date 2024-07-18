@@ -34,6 +34,7 @@ class CopilotApp:
         self.drag_data = {"x": 0, "y": 0}  # Store the drag data
         self.border_color = "#363537"
         self.is_pinned = False
+        self.temp_generated_text = ""  # Temporary storage for generated text
 
     def _initialize_root_window(self):
         """
@@ -229,6 +230,8 @@ class CopilotApp:
         # According to the type of text, insert it into the text box
         if isinstance(text, str):
             logger.debug(f"Text")
+            # update the temporary generated text, which will be used for editing
+            self.temp_generated_text = text
             text_box.insert(tk.END, text)
         elif hasattr(text, '__iter__'):
             logger.debug(f"Generator")
@@ -262,7 +265,7 @@ class CopilotApp:
             edit_button = ctk.CTkButton(
                 edit_buttons_frame,
                 text=task,
-                command=lambda t=task: self.edit_text(t, text, text_box),
+                command=lambda t=task: self.edit_text(t, self.temp_generated_text, text_box),
                 **edit_button_options,
             )
             edit_button.grid(row=0, column=i, padx=5)
@@ -294,7 +297,11 @@ class CopilotApp:
             chunk = next(text_generator)
             logger.debug(f"Generated chunk: {chunk}")
             text_box.configure(state="normal")  # Make the text box editable
-            text_box.insert(tk.END, chunk.choices[0].delta.content)
+
+            content = chunk.choices[0].delta.content
+            self.temp_generated_text += content
+            text_box.insert(tk.END, content)
+
             text_box.see(tk.END)
             text_box.update()
             text_box.configure(state="disabled")  # Make the text box read-only again
@@ -348,6 +355,18 @@ class CopilotApp:
             prompt = prompt.format(text=text, language=LANGUAGE)
             logger.info(f"Prompt for {task}: {prompt}")
             generated_text = self.llm.generate(prompt)
+            
+            # Handle generator
+            if isinstance(generated_text, str):
+                pass
+            else:
+                generated_text_itered = ""
+                for chunk in generated_text:
+                    message = chunk.choices[0].delta.content
+                    logger.debug(f"Chunk message is {message}")
+                    generated_text_itered += message
+                generated_text = generated_text_itered
+
             logger.info(f"Generated text for {task}: {generated_text}")
             pyperclip.copy(generated_text)
             self.root.after(0, self.update_text_box, text_box, generated_text)

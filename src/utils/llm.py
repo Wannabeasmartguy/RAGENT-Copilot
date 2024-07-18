@@ -3,7 +3,7 @@ from openai import OpenAI
 from loguru import logger
 from utils.logger_config import setup_logger
 
-from typing import List
+from typing import List, Generator
 
 
 DEFAULT_MODEL = "qwen2:1.5b"
@@ -45,14 +45,14 @@ class LLM:
 
     def generate(
         self, text: str
-    ) -> str:
+    ) -> str | Generator:
         """
         Generate a response from the language model based on the provided text.
 
         :param text: Input text prompt for the model.
         :param max_tokens: Maximum number of tokens to generate.
         :param temperature: Sampling temperature for generation.
-        :return: Generated text response.
+        :return: Generated text response.If "stream" is True, a generator is returned.
         """
         logger.info(f"Generating response for text: {text}")
         response = self.llm.chat.completions.create(
