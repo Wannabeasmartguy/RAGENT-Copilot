@@ -32,7 +32,7 @@ Email:
         {
             "task": "Fix Grammar",
             "prompt": """
-Fix the grammar in the text below in {language}:
+Fix the grammar in the text below:
 
 {text}
 

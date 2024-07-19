@@ -1,12 +1,15 @@
 import sys
 import time
 import signal
+import pystray
 import tkinter as tk
 import keyboard
 import pyautogui
 import threading
 import customtkinter as ctk
 from concurrent.futures import ThreadPoolExecutor
+from pystray import MenuItem as item, Menu
+from PIL import Image
 from typing import Generator, Union
 from utils.llm import LLM
 from loguru import logger
@@ -43,7 +46,7 @@ class CopilotApp:
         Initialize the main application window with specific attributes.
         """
         self.root.title("Button Tree")
-        self.root.geometry("400x300")
+        self.root.geometry("400x400")
         self.root.overrideredirect(True)
         self.root.attributes("-topmost", True)
         self.root.attributes("-transparentcolor", self.root["bg"])
@@ -421,7 +424,28 @@ def monitor_keys(app):
         keyboard.unhook_all()
 
 
+def exit_action(icon, item):
+    icon.stop()
+    logger.info("Exiting application from tray icon")
+    root.quit()
+
+
+def create_tray_icon(app):
+    image = Image.open("assets\RAGenT_logo.png")  # Replace "icon.png" with the path to your icon file
+    menu = (item('Quit', exit_action),)
+    icon = pystray.Icon("name", image, "RAGENT-Copilot", menu)
+
+    # Clicking the icon to the left will open the window.
+    def on_clicked(icon, query):
+        if str(query) == "Toggle Window":
+            app.toggle_window()
+    icon.menu = Menu(item('Toggle Window', on_clicked, default=True, visible=False), *icon.menu)
+    
+    icon.run()
+
+
 def main():
+    global root
     root = ctk.CTk()
     app = CopilotApp(root)
     app.create_right_click_menu()  # Add this line to create the right-click menu
@@ -433,6 +457,11 @@ def main():
     monitor_thread = threading.Thread(target=monitor_keys, args=(app,))
     monitor_thread.daemon = True
     monitor_thread.start()
+
+    # Start tray icon in a separate thread
+    tray_thread = threading.Thread(target=create_tray_icon, args=(app,))
+    tray_thread.daemon = True
+    tray_thread.start()
 
     root.mainloop()
 

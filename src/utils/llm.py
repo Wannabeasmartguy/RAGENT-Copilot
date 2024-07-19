@@ -16,7 +16,7 @@ DEFAULT_CONFIG = [
             "temperature": 0.3,
             "top_p": 0.5,
             "max_tokens": 2048,
-            "stream": False,
+            "stream": True,
         },
     }
 ]
