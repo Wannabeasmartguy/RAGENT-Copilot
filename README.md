@@ -16,7 +16,6 @@ https://github.com/beratcmn/local-intelligence/assets/47108366/cc223c7e-cae0-465
   - [Usage](#usage)
   - [Contributing](#contributing)
   - [License](#license)
-  - [Contact](#contact)
 
 ## Features
 
@@ -29,16 +28,13 @@ https://github.com/beratcmn/local-intelligence/assets/47108366/cc223c7e-cae0-465
 
 ## Todo
 
-- [x] Add CPU only LLM inference
-- [x] Add more features such as rephrasing based on the desired tone
-- [x] Ensure the application is running smoothly on Mac
-- [ ] Ensure the application is running smoothly on Linux
-- [ ] Build the project to a standalone executable for Windows, macOS, and Linux
-- [ ] Create a user-friendly installer for the application
-- [x] Better theme, icons, and overall design
-- [x] Fix text-view spawning outside of the screen
-- [x] Make text-view window draggable
-- [ ] Learn how to be a open source maintainer
+- [x] Ollama inference support
+- [x] Add more features such as rephrasing according to desired tone of voice
+- [x] Streaming output support
+- [ ] Multi-language support (RAGENT-based i18n support)
+- [ ] Support for model customization (RAGENT-based model customization)
+- [ ] Build project as standalone executable
+- [ ] Create user-friendly installers for applications
 
 ## Installation
 
@@ -101,9 +97,3 @@ I welcome contributions from the community! Here's how you can help:
 ## License
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-For any questions or issues, please open an issue in this repository or contact the project maintainers.
-
-- [Berat Çimen](https://github.com/beratcmn)
