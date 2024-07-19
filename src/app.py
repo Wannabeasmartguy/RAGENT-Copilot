@@ -438,5 +438,4 @@ def main():
 
 
 if __name__ == "__main__":
-    logger.add("app.log", rotation="10 MB")
     main()
