@@ -1,8 +1,10 @@
 import sys
+import time
 import signal
 import tkinter as tk
 import keyboard
 import pyautogui
+import threading
 import customtkinter as ctk
 from concurrent.futures import ThreadPoolExecutor
 from typing import Generator, Union
@@ -408,14 +410,29 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 
+def monitor_keys(app):
+    try:
+        keyboard.add_hotkey("ctrl+space", app.toggle_window)
+        while True:
+            time.sleep(1)
+    except Exception as e:
+        logger.error(f"Exception in key monitoring: {e}")
+    finally:
+        keyboard.unhook_all()
+
+
 def main():
     root = ctk.CTk()
     app = CopilotApp(root)
     app.create_right_click_menu()  # Add this line to create the right-click menu
-    keyboard.add_hotkey("ctrl+space", app.toggle_window)
 
     # Set up signal handler for Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
+
+    # Start key monitoring in a separate thread
+    monitor_thread = threading.Thread(target=monitor_keys, args=(app,))
+    monitor_thread.daemon = True
+    monitor_thread.start()
 
     root.mainloop()
 
