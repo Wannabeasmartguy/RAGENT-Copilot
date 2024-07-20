@@ -9,6 +9,7 @@ import threading
 import customtkinter as ctk
 from concurrent.futures import ThreadPoolExecutor
 from pystray import MenuItem as item, Menu
+from plyer import notification
 from PIL import Image
 from typing import Generator, Union
 from utils.llm import LLM
@@ -412,6 +413,19 @@ def signal_handler(sig, frame):
     logger.info("Ctrl+C pressed. Exiting...")
     sys.exit(0)
 
+keyboard.add_hotkey("ctrl+c", signal_handler)
+
+
+def show_notification():
+    notification.notify(
+        app_name="RAGENT-Copilot",
+        app_icon="assets\RAGenT_logo.ico",  # Replace with the path to your icon file
+        # ticker="RAGENT-Copilot",
+        title="应用启动",
+        message="RAGENT-Copilot 已启动",
+        timeout=10  # 通知显示的时间（秒）
+    )
+
 
 def monitor_keys(app):
     try:
@@ -435,6 +449,9 @@ def create_tray_icon(app):
     menu = (item('Quit', exit_action),)
     icon = pystray.Icon("name", image, "RAGENT-Copilot", menu)
 
+    # 显示通知
+    show_notification()
+
     # Clicking the icon to the left will open the window.
     def on_clicked(icon, query):
         if str(query) == "Toggle Window":
@@ -449,9 +466,6 @@ def main():
     root = ctk.CTk()
     app = CopilotApp(root)
     app.create_right_click_menu()  # Add this line to create the right-click menu
-
-    # Set up signal handler for Ctrl+C
-    signal.signal(signal.SIGINT, signal_handler)
 
     # Start key monitoring in a separate thread
     monitor_thread = threading.Thread(target=monitor_keys, args=(app,))

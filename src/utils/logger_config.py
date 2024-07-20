@@ -15,7 +15,10 @@ def setup_logger():
               '| <magenta>{process}</magenta>:<yellow>{thread}</yellow> ' \
               '| <cyan>{name}</cyan>:<cyan>{function}</cyan>:<yellow>{line}</yellow> - <level>{message}</level>'
 
-    logger.remove(0)  # 移除默认的日志记录器
+    try:
+        logger.remove(0)  # 移除默认的日志记录器
+    except ValueError:
+        pass
 
     # debug
     logger.add(folder_ + prefix_ + "debug.log", level="DEBUG", backtrace=backtrace_, diagnose=diagnose_,
@@ -47,12 +50,12 @@ def setup_logger():
                rotation=rotation_, retention=retention_, encoding=encoding_,
                filter=lambda record: record["level"].no >= logger.level("CRITICAL").no)
 
-    logger.add(sys.stderr, level="CRITICAL", backtrace=backtrace_, diagnose=diagnose_,
-               format=format_, colorize=True,
-               filter=lambda record: record["level"].no >= logger.level("CRITICAL").no)
+    # logger.add(sys.stderr, level="CRITICAL", backtrace=backtrace_, diagnose=diagnose_,
+    #            format=format_, colorize=True,
+    #            filter=lambda record: record["level"].no >= logger.level("CRITICAL").no)
     
-    logger.add(sys.stdout, level="INFO", backtrace=backtrace_, diagnose=diagnose_,
-               format=format_, colorize=True,
-               filter=lambda record: record["level"].no == logger.level("INFO").no)
+    # logger.add(sys.stdout, level="INFO", backtrace=backtrace_, diagnose=diagnose_,
+    #            format=format_, colorize=True,
+    #            filter=lambda record: record["level"].no == logger.level("INFO").no)
 
 setup_logger()
