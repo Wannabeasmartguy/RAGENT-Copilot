@@ -1,6 +1,7 @@
+import os
 import sys
 import time
-import signal
+# import signal
 import pystray
 import tkinter as tk
 import keyboard
@@ -409,11 +410,11 @@ class CopilotApp:
         self.root.bind("<Button-3>", show_right_click_menu)
 
 
-def signal_handler(sig, frame):
-    logger.info("Ctrl+C pressed. Exiting...")
-    sys.exit(0)
+# def signal_handler(sig, frame):
+#     logger.info("Ctrl+C pressed. Exiting...")
+#     sys.exit(0)
 
-keyboard.add_hotkey("ctrl+c", signal_handler)
+# keyboard.add_hotkey("ctrl+c", signal_handler)
 
 
 def show_notification():
@@ -429,12 +430,15 @@ def show_notification():
 
 def monitor_keys(app):
     try:
-        keyboard.add_hotkey("ctrl+space", app.toggle_window)
+        if not keyboard.add_hotkey("ctrl+shift+space", app.toggle_window):
+            logger.error("Failed to register hotkey")
+            return
         while True:
             time.sleep(1)
     except Exception as e:
         logger.error(f"Exception in key monitoring: {e}")
     finally:
+        keyboard.remove_hotkey("ctrl+shift+space")
         keyboard.unhook_all()
 
 
@@ -444,9 +448,16 @@ def exit_action(icon, item):
     root.quit()
 
 
+def restart_action(icon, item):
+    icon.stop()
+    logger.info("Restarting application from tray icon")
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
+
 def create_tray_icon(app):
     image = Image.open("assets\RAGenT_logo.png")  # Replace "icon.png" with the path to your icon file
-    menu = (item('Quit', exit_action),)
+    menu = (item('Restart', restart_action), item('Quit', exit_action),)
     icon = pystray.Icon("name", image, "RAGENT-Copilot", menu)
 
     # 显示通知

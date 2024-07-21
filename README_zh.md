@@ -15,6 +15,9 @@ RAGENT-Copilot 是一款多功能的桌面应用程序，旨在使用 LLM 执行
     - [先决条件](#先决条件)
     - [步骤](#步骤)
   - [使用](#使用)
+    - [从源码运行](#从源码运行)
+    - [从可执行文件运行](#从可执行文件运行)
+  - [贡献](#贡献)
   - [许可证](#许可证)
 
 ## 功能
@@ -45,8 +48,8 @@ RAGENT-Copilot 是一款多功能的桌面应用程序，旨在使用 LLM 执行
 1.**克隆版本库：**
 
    ```sh
-   git clone https://github.com/beratcmn/local-intelligence.git
-   cd local-intelligence
+   git clone https://github.com/Wannabeasmartguy/RAGENT-Copilot.git
+   cd RAGENT-Copilot
    ```
 
 2.**创建虚拟环境：**
@@ -84,6 +87,8 @@ ollama pull qwen2:1.5b
 
 ## 使用
 
+### 从源码运行
+
 1.**运行应用程序：**
 
     在本项目的根目录下，运行以下命令：
@@ -92,10 +97,33 @@ ollama pull qwen2:1.5b
     ```
 
 2.**唤出图形用户界面：**
-   - 按 `CTRL + SPACE` 键唤出应用程序窗口。
+   - 按 `CTRL + Shift + SPACE` 键唤出应用程序窗口。
    - 使用鼠标拖动选定需要处理的文本。
    - 点击相应的按钮，选择所需的任务。
    - 结果将显示在新窗口中。
+
+### 从可执行文件运行
+
+1.**下载可执行文件：**
+
+   您可以从[这里](https://github.com/Wannabeasmartguy/RAGENT-Copilot/releases)下载适用于您的操作系统的安装导航。（目前仅提供 Windows 版本）
+
+2.**运行安装导航：**
+
+   双击即可启动应用安装导航。
+
+3.**运行应用程序：**
+
+   跟随安装导航的指示，完成安装后，您可以在开始菜单中找到应用程序的快捷方式，单击即可启动应用程序。 
+
+   - 按 `CTRL + SPACE` 键或单击右下角的任务栏图标唤出应用程序窗口。
+   - 使用鼠标拖动选定需要处理的文本。
+   - 点击相应的按钮，选择所需的任务。
+   - 结果将显示在新窗口中。
+
+## 贡献
+
+如果您有任何建议或改进，请随时提交拉取请求或提 issue 。
 
 ## 许可证
 
