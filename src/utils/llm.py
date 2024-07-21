@@ -1,9 +1,11 @@
+import json
+
 # from llama_cpp import Llama
 from openai import OpenAI
 from loguru import logger
 from utils.logger_config import setup_logger
 
-from typing import List, Generator
+from typing import List, Dict, Generator, Optional
 
 
 DEFAULT_MODEL = "qwen2:1.5b"
@@ -27,10 +29,29 @@ class LLM:
     LLM class encapsulates the logic to load a pre-trained language model and generate text based on input prompts.
     """
 
-    def __init__(self, config_list: List = DEFAULT_CONFIG) -> None:
+    def __init__(self, config_list: Optional[List] = None) -> None:
         logger.info("Loading model...")
-        self.config_list = config_list
-        self.defult_config = config_list[0]
+        try:
+            with open("settings/settings.json", "r", encoding="utf-8") as f:
+                settings: Dict[str,Dict] = json.load(f)
+                config = {
+                    "model": settings["general"].get("model", DEFAULT_MODEL),
+                    "api_key": settings["general"].get("api_key","noneed"),
+                    "base_url": settings["general"].get("base_url", "http://localhost:11434/v1"),
+                    "params": {
+                        "temperature": settings["advanced"].get("temperature", 0.3),
+                        "top_p": settings["advanced"].get("top_p", 0.5),
+                        "max_tokens": settings["advanced"].get("max_tokens", 2048),
+                        "stream": settings["advanced"].get("stream", True)
+                    }
+                }
+                saved_config_list = [config]
+                logger.info("Settings loaded successfully, using custom config."+str(config))
+        except Exception as e:
+            logger.error(f"Failed to load settings.json: {e}, using default config instead.")
+            saved_config_list = DEFAULT_CONFIG
+        self.config_list = config_list if config_list else saved_config_list
+        self.defult_config = self.config_list[0]
         self.system_prompt = (
             "You are responsible for rephrasing, summarizing, or editing various text snippets to make them more "
             "concise, coherent, and engaging. You are also responsible for writing emails, messages, and other forms "

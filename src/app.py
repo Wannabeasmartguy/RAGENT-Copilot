@@ -1,6 +1,8 @@
 import os
 import sys
 import time
+import queue
+import json
 # import signal
 import pystray
 import tkinter as tk
@@ -9,6 +11,7 @@ import pyautogui
 import threading
 import customtkinter as ctk
 from concurrent.futures import ThreadPoolExecutor
+from tkinter import messagebox
 from pystray import MenuItem as item, Menu
 from plyer import notification
 from PIL import Image
@@ -444,7 +447,7 @@ def monitor_keys(app):
 
 def exit_action(icon, item):
     icon.stop()
-    logger.info("Exiting application from tray icon")
+    logger.info("Exited application from tray icon")
     root.quit()
 
 
@@ -457,7 +460,7 @@ def restart_action(icon, item):
 
 def create_tray_icon(app):
     image = Image.open("assets\RAGenT_logo.png")  # Replace "icon.png" with the path to your icon file
-    menu = (item('Restart', restart_action), item('Quit', exit_action),)
+    menu = (item('Settings', open_settings_window), item('Restart', restart_action), item('Quit', exit_action),)
     icon = pystray.Icon("name", image, "RAGENT-Copilot", menu)
 
     # 显示通知
@@ -470,6 +473,145 @@ def create_tray_icon(app):
     icon.menu = Menu(item('Toggle Window', on_clicked, default=True, visible=False), *icon.menu)
     
     icon.run()
+
+
+def open_settings_window():
+    settings_window_queue.put(True)
+
+def handle_settings_window_queue():
+    try:
+        while True:
+            settings_window_queue.get_nowait()
+            create_settings_window()
+    except queue.Empty:
+        root.after(100, handle_settings_window_queue)
+
+def create_settings_window():
+    settings_window = ctk.CTkToplevel(root)
+    settings_window.title("Settings")
+    settings_window.geometry("400x500")
+
+    # 创建两个tab
+    settings_tabview = ctk.CTkTabview(master=settings_window, width=400)
+    settings_tabview.pack(padx=20, pady=20)
+    tab_general = settings_tabview.add("General")
+    tab_advanced = settings_tabview.add("Advanced")
+    settings_tabview.set("General")  # set currently visible tab
+
+    # General settings
+    ctk.CTkLabel(tab_general, text="Settings", font=("Roboto", 20)).pack(padx=10, pady=10)
+    ctk.CTkLabel(tab_general, text="Enter your model provider settings here:").pack(padx=10, pady=5)
+    # create a list to store labels and entries
+    general_labels_map = {
+        "Base URL:": "base_url",
+        "API Key:": "api_key",
+        "Model:": "model",
+    }
+    general_labels = []
+    general_entries = []
+    # Base URL
+    base_url_label = ctk.CTkLabel(tab_general, text="Base URL:")
+    base_url_label.pack(padx=10, pady=5, anchor='w')
+    general_labels.append(base_url_label)
+    base_url_entry = ctk.CTkEntry(tab_general, width=300)
+    base_url_entry.pack(padx=10, pady=5)
+    general_entries.append(base_url_entry)
+    # Api key
+    api_key_label = ctk.CTkLabel(tab_general, text="API Key:")
+    api_key_label.pack(padx=10, pady=5, anchor='w')
+    general_labels.append(api_key_label)
+    api_key_entry = ctk.CTkEntry(tab_general, show="*", width=300)
+    api_key_entry.pack(padx=10, pady=5)
+    general_entries.append(api_key_entry)
+    # Model name
+    model_label = ctk.CTkLabel(tab_general, text="Model:")
+    model_label.pack(padx=10, pady=5, anchor='w')
+    general_labels.append(model_label)
+    model_entry = ctk.CTkEntry(tab_general, width=300)
+    model_entry.pack(padx=10, pady=5)
+    general_entries.append(model_entry)
+
+    # Advanced settings
+    advanced_labels_map = {
+        "Temperature:": "temperature",
+        "Max Tokens:": "max_tokens",
+        "Top P:": "top_p",
+        "Frequency Penalty:": "frequency_penalty"
+    }
+    advanced_labels = []
+    advanced_entries = []
+    ctk.CTkLabel(tab_advanced, text="Advanced Settings for models", font=("Roboto", 20)).pack(padx=10, pady=10)
+    # Temperature
+    temperature_label = ctk.CTkLabel(tab_advanced, text="Temperature:")
+    temperature_label.pack(padx=10, pady=5, anchor='w')
+    advanced_labels.append(temperature_label)
+    temperature_entry = ctk.CTkEntry(tab_advanced, width=300)
+    temperature_entry.pack(padx=10, pady=5)
+    advanced_entries.append(temperature_entry)
+    # Max tokens
+    max_tokens_label = ctk.CTkLabel(tab_advanced, text="Max Tokens:")
+    max_tokens_label.pack(padx=10, pady=5, anchor='w')
+    advanced_labels.append(max_tokens_label)
+    max_tokens_entry = ctk.CTkEntry(tab_advanced, width=300)
+    max_tokens_entry.pack(padx=10, pady=5)
+    advanced_entries.append(max_tokens_entry)
+    # Top P
+    top_p_label = ctk.CTkLabel(tab_advanced, text="Top P:")
+    top_p_label.pack(padx=10, pady=5, anchor='w')
+    advanced_labels.append(top_p_label)
+    top_p_entry = ctk.CTkEntry(tab_advanced, width=300)
+    top_p_entry.pack(padx=10, pady=5)
+    advanced_entries.append(top_p_entry)
+    # Frequency penalty
+    frequency_penalty_label = ctk.CTkLabel(tab_advanced, text="Frequency Penalty:")
+    frequency_penalty_label.pack(padx=10, pady=5, anchor='w')
+    advanced_labels.append(frequency_penalty_label)
+    frequency_penalty_entry = ctk.CTkEntry(tab_advanced, width=300)
+    frequency_penalty_entry.pack(padx=10, pady=5)
+    advanced_entries.append(frequency_penalty_entry)
+
+    def save_settings():
+        # 将所有条目构建为一个可序列化的字典
+        # 根据 general_labels_map 和 advanced_labels_map 构建字典
+        settings = {
+            "general": {},
+            "advanced": {}
+        }
+
+        # 更新"general"部分
+        general_data = {general_labels_map[label.cget("text")]: entry.get() for label, entry in zip(general_labels, general_entries)}
+        settings["general"].update({k: v for k, v in general_data.items() if v != ""})
+
+        # 更新"advanced"部分
+        advanced_data = {advanced_labels_map[label.cget("text")]: entry.get() for label, entry in zip(advanced_labels, advanced_entries)}
+        settings["advanced"].update({k: v for k, v in advanced_data.items() if v != ""})
+
+        if not os.path.exists("settings"):
+            os.makedirs("settings")
+        # 保存之前，检查general是否全部为空，如果是，则不保存
+        if all(entry.get() == "" for entry in general_entries):
+            logger.warning("No general settings provided, not saving.")
+            # 弹出提示框
+            messagebox.showwarning("Warning", "No general settings provided, not saving.")
+            return
+        with open("settings/settings.json", "w") as file:
+            json.dump(settings, file)
+            logger.info("Settings saved successfully.")
+            # 弹出提示框
+
+        response = messagebox.askyesno("Settings Saved", "Settings saved successfully.\nDo you want to close all windows?", default=messagebox.NO)
+        if response:
+            settings_window.destroy()
+            # 关闭其他窗口的代码可以在这里添加
+        else:
+            # 返回的代码可以在这里添加
+            pass
+        # settings_window.destroy()
+
+    save_button = ctk.CTkButton(settings_window, text="Save", command=save_settings)
+    save_button.pack(padx=10, pady=10)
+
+settings_window_queue = queue.Queue()
 
 
 def main():
@@ -487,6 +629,9 @@ def main():
     tray_thread = threading.Thread(target=create_tray_icon, args=(app,))
     tray_thread.daemon = True
     tray_thread.start()
+
+    # Handle settings window queue in the main thread
+    root.after(100, handle_settings_window_queue)
 
     root.mainloop()
 
