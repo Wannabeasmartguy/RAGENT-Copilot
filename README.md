@@ -1,6 +1,10 @@
 # RAGENT-Copilot
 
+**English** | [简体中文](README_zh.md)
+
 RAGENT-Copilot is a versatile desktop application designed to perform a wide range of text processing tasks using the LLM. It provides intuitive user interface buttons with a variety of shortcut options for summarizing text, translating text, composing emails and interpreting text.
+
+https://github.com/user-attachments/assets/22c73f20-cf9d-4230-a138-95c1261768f0
 
 > This software is a secondary development of [local-intelligence](https://github.com/beratcmn/local-intelligence) based on the perspective of integration with the RAGENT application to realize a more comprehensive RAGENT experience and provide more functionality.
 >
