@@ -40,9 +40,9 @@ https://github.com/user-attachments/assets/22c73f20-cf9d-4230-a138-95c1261768f0
 - [x] Add more features such as rephrasing according to desired tone of voice
 - [x] Streaming output support
 - [ ] Multi-language support (RAGENT-based i18n support)
-- [ ] Support for model customization (RAGENT-based model customization)
-- [ ] Build project as standalone executable
-- [ ] Create user-friendly installers for applications
+- [x] Support for model customization (RAGENT-based model customization)
+- [x] Build project as standalone executable
+- [x] Create user-friendly installers for applications
 
 ## Installation
 
