@@ -1,5 +1,9 @@
 # RAGENT-Copilot
 
+**简体中文** | [English](README.md)
+
+https://github.com/user-attachments/assets/22c73f20-cf9d-4230-a138-95c1261768f0
+
 RAGENT-Copilot 是一款多功能的桌面应用程序，旨在使用 LLM 执行多种文本处理任务。它提供了直观的用户界面按钮，提供总结文本、翻译文本、撰写邮件和解释文本等多种快捷选项。
 
 > 本软件是基于与 RAGENT 应用集成的角度，对[local-intelligence](https://github.com/beratcmn/local-intelligence)进行二次开发，以实现 RAGENT 更加全面的体验和提供更多功能。
@@ -33,9 +37,9 @@ RAGENT-Copilot 是一款多功能的桌面应用程序，旨在使用 LLM 执行
 - [x] 增加更多功能，例如根据所需的语气重新措辞
 - [x] 支持流式输出
 - [ ] 支持多语言（基于 RAGENT 的 i18n 支持）
-- [ ] 支持模型自定义配置（基于 RAGENT 的模型自定义配置）
-- [ ] 将项目构建独立可执行文件
-- [ ] 为应用程序创建用户友好型安装程序
+- [x] 支持模型自定义配置（基于 RAGENT 的模型自定义配置）
+- [x] 将项目构建独立可执行文件
+- [x] 为应用程序创建用户友好型安装程序
 
 ## 安装
 
