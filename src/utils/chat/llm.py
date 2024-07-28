@@ -3,7 +3,7 @@ import json
 # from llama_cpp import Llama
 from openai import OpenAI
 from loguru import logger
-from utils.logger_config import setup_logger
+from utils.log.logger_config import setup_logger
 
 from typing import List, Dict, Generator, Optional
 

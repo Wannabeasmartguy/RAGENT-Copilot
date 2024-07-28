@@ -16,12 +16,12 @@ from pystray import MenuItem as item, Menu
 from plyer import notification
 from PIL import Image
 from typing import Generator, Union
-from utils.llm import LLM
+from utils.chat.llm import LLM
 from loguru import logger
-from utils.prompts import get_task_prompts, get_editor_prompts
-from utils.logger_config import setup_logger
+from utils.chat.prompts import get_task_prompts, get_editor_prompts
+from utils.log.logger_config import setup_logger
 # TODO：先使用环境变量控制语言
-from utils.prompts import LANGUAGE
+from utils.chat.prompts import LANGUAGE
 
 import pyperclip
 
