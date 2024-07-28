@@ -489,7 +489,9 @@ def handle_settings_window_queue():
 def create_settings_window():
     settings_window = ctk.CTkToplevel(root)
     settings_window.title("Settings")
-    settings_window.geometry("400x500")
+    settings_window.geometry("400x550")
+    settings_window.minsize(400, 550)
+    settings_window.maxsize(550, 600)
 
     # 创建两个tab
     settings_tabview = ctk.CTkTabview(master=settings_window, width=400)
@@ -608,8 +610,23 @@ def create_settings_window():
             pass
         # settings_window.destroy()
 
+    def reset_settings():
+            # 删除本地的settings.json文件
+            if os.path.exists("settings/settings.json"):
+                os.remove("settings/settings.json")
+                logger.info("Settings reset successfully.")
+                # 弹出提示框
+                messagebox.showinfo("Settings Reset", "Settings reset successfully.")
+            else:
+                logger.warning("No settings file found, nothing to reset.")
+                # 弹出提示框
+                messagebox.showwarning("Warning", "No settings file found, nothing to reset.")
+
     save_button = ctk.CTkButton(settings_window, text="Save", command=save_settings)
     save_button.pack(padx=10, pady=10)
+
+    reset_button = ctk.CTkButton(settings_window, text="Reset", command=reset_settings)
+    reset_button.pack(padx=10, pady=10)
 
 settings_window_queue = queue.Queue()
 
