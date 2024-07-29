@@ -1,21 +1,84 @@
 from typing import Annotated, Literal, Dict, Callable, Union
 from trafilatura import fetch_url, extract
 from utils.tools.tool_utils import function_to_json
+from utils.log.logger_config import setup_logger
+from loguru import logger
 import json
 
 Operator = Literal["+", "-", "*", "/"]
-def tool_calculator(a: int, b: int, operator: Annotated[Operator, "operator"]) -> str:
-    '''A basic int calculator can do addition, subtraction, multiplication, and division.Useful for simple calculations.'''
-    if operator == "+":
-        return str(a + b)
-    elif operator == "-":
-        return str(a - b)
-    elif operator == "*":
-        return str(a * b)
-    elif operator == "/":
-        return str(int(a / b))
-    else:
-        raise ValueError("Invalid operator")
+def tool_calculator(expression:str) -> str:
+    """
+    A tool that calculates the result of a given mathematical expression, support basic operations of addition, subtraction, multiplication and division.The format for the expression is like "(3+5)*8/2".
+    """
+    logger.info(f"Calculating expression: {expression}")
+
+    def precedence(op:str):
+        if op in ('+', '-'):
+            return 1
+        if op in ('*', '/'):
+            return 2
+        return 0
+
+    def apply_operator(operators, values):
+        operator = operators.pop()
+        right = values.pop()
+        left = values.pop()
+        if operator == '+':
+            values.append(left + right)
+        elif operator == '-':
+            values.append(left - right)
+        elif operator == '*':
+            values.append(left * right)
+        elif operator == '/':
+            values.append(left / right)
+        logger.info(f"Applied operator {operator}: {left} {operator} {right} = {values[-1]}")
+
+    # 计算表达式
+    values = []
+    operators = []
+    i = 0
+    while i < len(expression):
+        # 如果当前字符是数字
+        if expression[i].isdigit():
+            # 找到数字的末尾
+            j = i
+            while j < len(expression) and expression[j].isdigit():
+                j += 1
+            # 将数字添加到values列表中
+            values.append(int(expression[i:j]))
+            logger.info(f"Pushed value: {values[-1]}")
+            i = j
+        # 如果当前字符是左括号
+        elif expression[i] == '(':
+            # 将左括号添加到operators列表中
+            operators.append(expression[i])
+            logger.info(f"Pushed operator: {expression[i]}")
+            i += 1
+        # 如果当前字符是右括号
+        elif expression[i] == ')':
+            # 弹出operators列表中的左括号
+            while operators and operators[-1] != '(':
+                apply_operator(operators, values)
+            operators.pop()
+            logger.info(f"Popped operator: {expression[i]}")
+            i += 1
+        # 如果当前字符是运算符
+        elif expression[i] in "+-*/":
+            # 弹出operators列表中的运算符，直到遇到左括号或者当前运算符的优先级小于等于operators[-1]的优先级
+            while (operators and precedence(operators[-1]) >= precedence(expression[i])):
+                apply_operator(operators, values)
+            # 将当前运算符添加到operators列表中
+            operators.append(expression[i])
+            logger.info(f"Pushed operator: {expression[i]}")
+            i += 1
+        else:
+            i += 1
+
+    while operators:
+        apply_operator(operators, values)
+
+    logger.info(f"Final result: {values[0]}")
+    return str(values[0])
 
 def tool_web_scraper(url: str) -> str:
     '''Useful to scrape web pages, and extract text content.'''
