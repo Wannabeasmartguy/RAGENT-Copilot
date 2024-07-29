@@ -159,6 +159,6 @@ def create_tools_call_completion(
     
     # 对不支持tool call的模型，直接提问
     except Exception as e:
-        logger.info(f"Current model doesn't support tools, please change model to support tools: {e}")
+        logger.info(f"Call tools failed: {e}")
         logger.info(f"Use default chat mode without tools")
         return client.chat.completions.create(model=model, messages=messages, stream=stream)
