@@ -1,9 +1,43 @@
 import json
 import random
+import inspect
 from loguru import logger
-from typing import Any, Dict, List, Union, Optional
+from copy import deepcopy
+from typing import Any, Dict, List, Union, Optional, Callable
 from openai import OpenAI, Stream
 from openai.types.chat.chat_completion import ChatCompletion
+
+from utils.chat.prompts import TOOL_USE_PROMPT
+
+def function_to_json(func: Callable[..., Any]) -> str:
+    # 获取函数的签名
+    sig = inspect.signature(func)
+    # 获取函数的文档字符串
+    doc = func.__doc__
+    
+    # 构建参数列表
+    properties = {}
+    for name, param in sig.parameters.items():
+        properties[name] = {
+            'type': param.annotation.__name__ if hasattr(param.annotation, '__name__') else str(param.annotation),
+            'description': ''  # 这里假设没有每个参数的单独描述
+        }
+    
+    # 构建JSON结构
+    function_json = {
+        'type': 'function',
+        'function': {
+            'name': func.__name__,
+            'description': doc.strip() if doc else '',
+            'parameters': {
+                'type': 'object',
+                'properties': properties,
+                'required': list(sig.parameters.keys())
+            }
+        }
+    }
+    
+    return json.dumps(function_json, indent=4)
 
 class ToolsParameterOutputParser:
     """将工具调用后返回的消息转换为JSON格式"""
@@ -54,12 +88,15 @@ class ToolsParameterOutputParser:
         return [{'name': param.name, 'parameters': json.loads(param.arguments), 'tool_call_id': tool_call_ids[params.index(param)]} for param in params]
 
 
-def create_completion(
+def create_tools_call_completion(
         messages: List[Dict[str, Any]], 
-        model:str = "llama3.1:latest", 
         tools: Optional[List[Dict[str, Any]]] = None, 
         function_map: Optional[Dict[str, Any]] = None,
-        stream: bool = False
+        *,
+        model: str = "llama3.1:latest", 
+        api_key: str = "noneed",
+        base_url: str = "http://localhost:11434/v1",
+        stream: bool = False,
     ) -> List[Dict[str, Any]]:
     """
     创建一个响应，如果检测到工具调用，则使用工具调用参数
@@ -71,43 +108,57 @@ def create_completion(
     """
     parser = ToolsParameterOutputParser()
 
-    # 第一步， 调用模型生成工具调用参数
     client = OpenAI(
-        api_key='ollama',
-        base_url='http://localhost:11434/v1'
-    )
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        tools=tools,
-        tool_choice="auto",
-        temperature=0
-        # stream=stream
-    )
-    parsed_params = parser(response)
-    logger.debug(parsed_params)
-    # 添加工具调用参数到消息列表
-    messages.append(dict(response.choices[0].message))
+            api_key=api_key,
+            base_url=base_url
+        )
 
-    # 第二步， 根据工具调用参数，本地运行工具，并返回结果
-    function_results = [function_map[param['name']](**param['parameters']) for param in parsed_params]
-    # 添加所有工具调用结果到消息列表
-    for result in function_results:
-        messages.append({
-            "role":"tool",
-            "name": parsed_params[function_results.index(result)]['name'],
-            "content":result,
-            "tool_call_id":parsed_params[function_results.index(result)]['tool_call_id']
-        })
+    try:
+        # 第一步， 调用模型生成工具调用参数
+        # 先删除原有的system message，把专用于tool call的system message添加到消息列表
+        messages_copy = deepcopy(messages)
+        messages_copy = [message for message in messages_copy if message['role'] != 'system']
+        messages_copy.insert(0, {"role":"system", "content":TOOL_USE_PROMPT})
+        logger.info("Trying to use tools")
+        # logger.debug(f"messages input: {messages_copy}")
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            temperature=0
+            # stream=stream
+        )
+        parsed_params = parser(response)
+        logger.debug(parsed_params)
+        # 添加工具调用参数到消息列表
+        messages.append(dict(response.choices[0].message))
+
+        # 第二步， 根据工具调用参数，本地运行工具，并返回结果
+        function_results = [function_map[param['name']](**param['parameters']) for param in parsed_params]
+        # 添加所有工具调用结果到消息列表
+        for result in function_results:
+            messages.append({
+                "role":"tool",
+                "name": parsed_params[function_results.index(result)]['name'],
+                "content":result,
+                "tool_call_id":parsed_params[function_results.index(result)]['tool_call_id']
+            })
+        
+        # 第三步， 调用模型生成最终的回复
+        logger.debug(f"final messages input: {messages}")
+        final_response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            stream=stream
+        )
+        messages.append(dict(final_response.choices[0].message))
+        return final_response
     
-    # 第三步， 调用模型生成最终的回复
-    logger.debug(f"final messages input: {messages}")
-    final_response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        tools=tools,
-        tool_choice="auto",
-        stream=stream
-    )
-    messages.append(dict(final_response.choices[0].message))
-    return final_response, messages
+    # 对不支持tool call的模型，直接提问
+    except Exception as e:
+        logger.info(f"Current model doesn't support tools, please change model to support tools: {e}")
+        logger.info(f"Use default chat mode without tools")
+        return client.chat.completions.create(model=model, messages=messages, stream=stream)

@@ -1,6 +1,8 @@
 # LANGUAGE = "English"
 LANGUAGE = "Chinese"
 
+TOOL_USE_PROMPT = "You are an intelligent assistant that chooses whether or not to use a tool based on user commands."
+
 def get_task_prompts():
     """
     Return a list of task prompts for various text processing tasks. Each prompt is designed to guide the language model

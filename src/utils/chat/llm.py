@@ -4,8 +4,11 @@ import json
 from openai import OpenAI
 from loguru import logger
 from utils.log.logger_config import setup_logger
+from utils.tools.toolkits import TOOLS_LIST, TOOLS_MAP
+from utils.tools.tool_utils import create_tools_call_completion
 
 from typing import List, Dict, Generator, Optional
+from functools import partial
 
 
 DEFAULT_MODEL = "qwen2:1.5b"
@@ -29,7 +32,7 @@ class LLM:
     LLM class encapsulates the logic to load a pre-trained language model and generate text based on input prompts.
     """
 
-    def __init__(self, config_list: Optional[List] = None) -> None:
+    def __init__(self, config_list: Optional[List] = None):
         logger.info("Loading model...")
         try:
             with open("settings/settings.json", "r", encoding="utf-8") as f:
@@ -62,6 +65,7 @@ class LLM:
             base_url = self.defult_config["base_url"],
             api_key = self.defult_config["api_key"], 
         )
+        self.generate_with_tools = partial(create_tools_call_completion, tools = TOOLS_LIST, function_map = TOOLS_MAP)
         logger.info("Model loaded successfully.")
 
     def generate(

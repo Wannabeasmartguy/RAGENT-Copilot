@@ -7,3 +7,4 @@ PyAutoGUI==0.9.54
 pyperclip==1.8.2
 pystray==0.19.5
 plyer==2.1.0
+trafilatura==1.11.0
