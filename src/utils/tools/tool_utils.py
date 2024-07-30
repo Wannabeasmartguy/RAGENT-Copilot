@@ -9,18 +9,32 @@ from openai.types.chat.chat_completion import ChatCompletion
 
 from utils.chat.prompts import TOOL_USE_PROMPT
 
+
 def function_to_json(func: Callable[..., Any]) -> str:
     # 获取函数的签名
     sig = inspect.signature(func)
     # 获取函数的文档字符串
     doc = func.__doc__
     
+    # 解析文档字符串以获取参数描述
+    param_descriptions = {}
+    if doc:
+        lines = doc.strip().split('\n')
+        for line in lines:
+            line = line.strip()
+            if line.startswith(':param'):
+                parts = line.split(':param ')[1].split(':')
+                if len(parts) > 1:
+                    param_name = parts[0].strip()
+                    description = parts[1].strip()
+                    param_descriptions[param_name] = description
+    
     # 构建参数列表
     properties = {}
     for name, param in sig.parameters.items():
         properties[name] = {
             'type': param.annotation.__name__ if hasattr(param.annotation, '__name__') else str(param.annotation),
-            'description': ''  # 这里假设没有每个参数的单独描述
+            'description': param_descriptions.get(name, '')  # 使用解析的描述或空字符串
         }
     
     # 构建JSON结构
@@ -36,8 +50,12 @@ def function_to_json(func: Callable[..., Any]) -> str:
             }
         }
     }
-    
+
+    # python中字符串为str， json中字符串为string，所以需要将"type": "str"改为"type": "string"
+    function_json['function']['parameters']['properties'] = {k: {**v, 'type': 'string' if v['type'] == 'str' else v['type']} for k, v in function_json['function']['parameters']['properties'].items()}
+
     return json.dumps(function_json, indent=4)
+
 
 class ToolsParameterOutputParser:
     """将工具调用后返回的消息转换为JSON格式"""
@@ -132,7 +150,7 @@ def create_tools_call_completion(
         parsed_params = parser(response)
         logger.debug(parsed_params)
         # 添加工具调用参数到消息列表
-        messages.append(dict(response.choices[0].message))
+        messages.append(response.choices[0].message.dict(exclude_unset=True))
 
         # 第二步， 根据工具调用参数，本地运行工具，并返回结果
         function_results = [function_map[param['name']](**param['parameters']) for param in parsed_params]

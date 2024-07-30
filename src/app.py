@@ -466,11 +466,11 @@ def create_tray_icon(app):
     # 显示通知
     show_notification()
 
-    # Clicking the icon to the left will open the window.
+    # Clicking the icon to the left will open the settings window.
     def on_clicked(icon, query):
-        if str(query) == "Toggle Window":
-            app.toggle_window()
-    icon.menu = Menu(item('Toggle Window', on_clicked, default=True, visible=False), *icon.menu)
+        if str(query) == "Open Settings":
+            open_settings_window()
+    icon.menu = Menu(item('Open Settings', on_clicked, default=True, visible=False), *icon.menu)
     
     icon.run()
 

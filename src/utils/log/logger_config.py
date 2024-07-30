@@ -11,7 +11,7 @@ def setup_logger():
     backtrace_ = True
     diagnose_ = True
 
-    format_ = '<green>{time:YYYY-DD-MM HH:mm:ss.SSS}</green> | <level>{level: <8}</level> ' \
+    format_ = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> ' \
               '| <magenta>{process}</magenta>:<yellow>{thread}</yellow> ' \
               '| <cyan>{name}</cyan>:<cyan>{function}</cyan>:<yellow>{line}</yellow> - <level>{message}</level>'
 

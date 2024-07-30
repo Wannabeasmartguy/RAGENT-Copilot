@@ -9,6 +9,8 @@ Operator = Literal["+", "-", "*", "/"]
 def tool_calculator(expression:str) -> str:
     """
     A tool that calculates the result of a given mathematical expression, support basic operations of addition, subtraction, multiplication and division.The format for the expression is like "(3+5)*8/2".
+
+    :param expression: The mathematical expression to be calculated.
     """
     logger.info(f"Calculating expression: {expression}")
 
