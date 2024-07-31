@@ -172,7 +172,7 @@ def create_tools_call_completion(
             tool_choice="auto",
             stream=stream
         )
-        messages.append(dict(final_response.choices[0].message))
+        # messages.append(dict(final_response.choices[0].message))
         return final_response
     
     # 对不支持tool call的模型，直接提问
