@@ -572,6 +572,29 @@ def create_settings_window():
     frequency_penalty_entry.pack(padx=10, pady=5)
     advanced_entries.append(frequency_penalty_entry)
 
+    # 加载已保存的设置
+    def load_settings():
+        if os.path.exists("settings/settings.json"):
+            with open("settings/settings.json", "r") as file:
+                settings = json.load(file)
+                
+                # 填充常规设置
+                for label, entry in zip(general_labels, general_entries):
+                    key = general_labels_map[label.cget("text")]
+                    if key in settings["general"]:
+                        entry.delete(0, tk.END)
+                        entry.insert(0, settings["general"][key])
+                
+                # 填充高级设置
+                for label, entry in zip(advanced_labels, advanced_entries):
+                    key = advanced_labels_map[label.cget("text")]
+                    if key in settings["advanced"]:
+                        entry.delete(0, tk.END)
+                        entry.insert(0, settings["advanced"][key])
+
+    # 调用加载设置函数
+    load_settings()
+    
     def save_settings():
         # 将所有条目构建为一个可序列化的字典
         # 根据 general_labels_map 和 advanced_labels_map 构建字典
